@@ -35,7 +35,7 @@ This means that interaction between containers goes out the vpn and back in to t
 #### certs 
 
 I use 1 cert per dns entry instead of a wildcard, I use letsencrypt so it doesn't cost anymore, and I automate the renewal.
-In the haproxy config in this repo haproxy checks a directory for ssl certs so I can just dump them in there. 
+In the haproxy config in this repo, haproxy checks a directory for ssl certs so I can just dump as many certs as needed in there. 
 
 
 ##### bring your own ssl cert and key. 
@@ -54,7 +54,7 @@ web
 
 ##### aws hosted with helper script
 
-ssl is provided by letsencryt and requires 
+ssl is provided by letsencrypt and requires 
 
 * certbot 
 * route53 certbot plugin
@@ -88,7 +88,7 @@ Obtaining a new certificate
 Performing the following challenges:
 dns-01 challenge for sonarr.example.com
 Waiting 10 seconds for DNS changes to propagate
-`g;Waiting for verification...G
+`Waiting for verification...
 Cleaning up challenges
 
 IMPORTANT NOTES:
@@ -105,6 +105,9 @@ IMPORTANT NOTES:
 
 once this runs the cert + key will be concatenated into single file and placed into /etc/ssl/private
 then this folder can be mounted into haproxy.
+
+you can also run this again in 3 months time or put it in a cron, this will renew your certs with letsencrypt and restart haproxy.
+
 
 #### backends 
 
@@ -156,4 +159,10 @@ vpn providers i've tried that support this:
 [nordvpn](https://go.nordvpn.net/aff_c?offer_id=15&aff_id=25061&url_id=902)
 [airvpn](https://airvpn.info/?referred_by=292660)
 
+maybe put this in a cron on the docker host
 
+`check_publicip.sh`  
+
+this checks for the public ip that your docker host appears from.  
+Then does the same check in each container, in theory all containers should appear as the vpn public ip.
+if the ip addresses match the we assume the vpn is down and kill the containers. (this could be true if your docker host was also connected to the same vpn endpoint)

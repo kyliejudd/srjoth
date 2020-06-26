@@ -1,0 +1,122 @@
+version: '2.1'
+networks:
+  default:
+    ipam:
+      driver: default
+
+services:
+  transmission:
+    image: linuxserver/transmission
+    depends_on:
+      - vpn
+    environment:
+      TZ: 'Europe/London'
+      PGID: 1000
+      PUID: 1000
+      USER: <USERNAME>
+      PASS: <PASSWORD>
+    network_mode: "service:vpn"
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /mnt/docker/srjoth/transmission/config:/config
+      - /mnt/docker/srjoth/transmission/wishlist:/watch
+      - /mnt/local/media/downloads:/downloads
+
+  jackett:
+    image: linuxserver/jackett
+    depends_on:
+      - vpn
+    restart: always
+    network_mode: "service:vpn"
+    environment:
+      PGID: 1000
+      PUID: 1000
+      TZ: Europe/London
+    volumes:
+      - /mnt/docker/srjoth/jackett/config:/config
+      - /mnt/docker/srjoth/transmission/wishlist:/downloads
+
+  radarr:
+    image: linuxserver/radarr
+    depends_on:
+      - vpn
+    restart: always
+    network_mode: "service:vpn"
+    environment:
+      PGID: 1000
+      PUID: 1000
+      TZ: Europe/London
+    volumes:
+      - /mnt/docker/srjoth/radarr/config:/config
+      - /mnt/local/media/movies:/movies
+      - /mnt/local/media/downloads:/downloads
+
+
+  sonarr:
+    image: linuxserver/sonarr
+    depends_on:
+      - vpn
+    restart: always
+    network_mode: "service:vpn"
+    environment:
+      PGID: 1000
+      PUID: 1000
+      TZ: Europe/London
+    volumes:
+      - /mnt/docker/srjoth/sonarr/config:/config
+      - /mnt/local/media/tv:/tv
+      - /mnt/local/media/downloads:/downloads
+
+  vpn:
+    image: dperson/openvpn-client
+    cap_add:
+      - net_admin
+    dns:
+     - 8.8.4.4
+     - 8.8.8.8
+    environment:
+      TZ: 'Europe/London'
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    restart: unless-stopped
+    security_opt:
+      - label:disable
+    stdin_open: true
+    tty: true
+    volumes:
+      - /dev/net:/dev/net:z
+      - /mnt/docker/srjoth/vpn:/vpn
+
+  web:
+    image: haproxy
+    depends_on:
+      - transmission
+      - sonarr
+      - jackett
+      - radarr
+    environment:
+      TZ: 'Europe/London'
+      IPV6: 0
+    read_only: true
+    links:
+      - vpn:transmission
+      - vpn:sonarr
+      - vpn:jackett
+      - vpn:radarr
+    ports:
+      - "443:443"
+    read_only: false
+    volumes:
+      - /mnt/docker/srjoth/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - /etc/ssl/private:/etc/ssl/private/:ro
+      - /var/run/haproxy:/var/run/haproxy
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
