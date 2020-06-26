@@ -32,6 +32,8 @@ This means that interaction between containers goes out the vpn and back in to t
 
 ### haproxy (reverse proxy)
 
+you will need to configure your dns records.
+
 #### certs 
 
 I use 1 cert per dns entry instead of a wildcard, I use letsencrypt so it doesn't cost anymore, and I automate the renewal.
@@ -165,4 +167,4 @@ maybe put this in a cron on the docker host
 
 this checks for the public ip that your docker host appears from.  
 Then does the same check in each container, in theory all containers should appear as the vpn public ip.
-if the ip addresses match the we assume the vpn is down and kill the containers. (this could be true if your docker host was also connected to the same vpn endpoint)
+if the container ip address matches the host we assume the vpn is down and kill the containers. (this could be true if your docker host was also connected to the same vpn endpoint)
